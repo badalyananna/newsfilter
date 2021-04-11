@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>News Filter</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+
+    
+    <!-- Custom styles for this template -->
+    {% load static %}
+    <link href="{% static 'dashboard.css' %}" rel="stylesheet">
+  </head>
+  <body>
+    
+<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+  <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="/">News Filter</a>
+  <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <p class="navbar-nav px-3 ms-auto" style="color:rgb(197, 197, 197)">Hello, {{ user.first_name|default:'Guest' }}!</p>
+  <ul class="navbar-nav px-3">
+    <li class="nav-item text-nowrap">
+      <a class="nav-link" href="{% url 'logout' %}">Sign out</a>
+    </li>
+  </ul>
+</header>
+
+<div class="container-fluid">
+  <div class="row">
+    <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar" style="--bs-scroll-height: 10000px;">
+      <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <a class="nav-link active" aria-current="page" href="/feed/all">
+              <i class="bi-house-door"></i>
+              All selected news
+            </a>
+          
+        </ul>
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+          <span>Topics</span>
+          <span class="link-secondary hand-pointer" data-bs-toggle="tooltip" data-bs-placement="left" title="Add a new topic">
+            <i class="bi-plus-circle" data-bs-toggle="modal" data-bs-target="#addTopic"></i>
+          </span>
+        </h6>
+        <ul class="nav flex-column mb-2">
+            {% for item in topics %}
+              <li class="nav-item d-flex flex-row justify-content-between">
+                <a class="nav-link d-flex align-items-center"href="/feed/topic/{{item.pk}}">
+                  <i class="bi-chevron-compact-right"></i>
+                  <span class="topic{{ item.pk }}">{{item.name|slice:":15" }}</span>
+                  
+                  <span class="badge badge-color rounded-pill ms-auto" id="topic{{item.pk}}" {% if item.unread_pieces == 0 %} style="display: none;" {% endif %}>{{item.unread_pieces}}</span>
+               </a>
+               <div class="edit-container">
+                <i class="bi-pencil-square hand-pointer link-secondary edit-category edit-topic" data-trigger-page={{request.path}} data-pk="{{item.pk}}" data-bs-toggle="modal" data-bs-target="#editTopic"></i>
+                <i class="bi-trash hand-pointer link-secondary edit-category" data-bs-toggle="modal" data-bs-target="#deleteTopic{{item.pk}}"></i> 
+               </div>
+             </li>
+
+            {% endfor %}
+      
+        </ul>
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+          <span>Websites</span>
+          <span class="link-secondary hand-pointer" data-bs-toggle="tooltip" data-bs-placement="left" title="Add a new website">
+            <i class="bi-plus-circle" data-bs-toggle="modal" data-bs-target="#addWebsite"></i>
+          </span>
+        </h6>
+        <ul class="nav flex-column mb-2">
+
+          {% for website in websites %}
+          <li class="nav-item d-flex flex-row justify-content-between">
+            <a class="nav-link d-flex align-items-center text-name" href="/feed/website/{{website.pk}}/">
+              <i class="bi-chevron-compact-right"></i>
+              <span id="website{{ website.pk }}">{{ website.name }}</span>
+              <span class="badge badge-color rounded-pill ms-auto" id="web{{website.pk}}" {% if website.unread_pieces == 0 %} style="display: none;" {% endif %}>{{website.unread_pieces}}</span>
+            </a>
+            <div class="edit-container">
+              <i class="bi-pencil-square hand-pointer link-secondary edit-category" data-trigger-page={{request.path}} data-pk="{{website.pk}}" data-bs-toggle="modal" data-bs-target="#editWebsite"></i>
+              <i class="bi-trash hand-pointer link-secondary edit-category" data-trigger-page={{request.path}} data-pk={{website.pk}} data-bs-toggle="modal" data-bs-target="#deleteWebsite"></i> 
+            </div>
+          </li>
+          {% endfor %}
+
+        </ul>
+
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+          <span>Important by topics</span>
+         </h6>
+        <ul class="nav flex-column mb-2">
+          <li class="nav-item flex-row">
+            <a class="nav-link" href="/feed/important/Other">
+              <i class="bi-chevron-compact-right"></i>
+              Other
+            </a>
+          </li>
+
+          {% for item in topics %}
+              <li class="nav-item flex-row">
+                <a class="nav-link" href="/feed/important/{{item.pk}}">
+                  <i class="bi-chevron-compact-right"></i>
+                  <span class="topic{{ item.pk }}">{{item.name}}</span>
+                </a>
+              </li>
+            {% endfor %}
+          
+        </ul>
+      </div>
+    </nav>
+
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4" style="margin-bottom: 2rem;">
+        {% block page_content %}{% endblock %}
+    </main>
+
+</div>
+</div>
+
+<!-- Modal add website-->
+<div class="modal fade" id="addWebsite" tabindex="-1" aria-labelledby="addWebsiteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addWebsiteLabel">Add a website</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+
+        <form action="/feed/add/" method="POST" class="post-form">
+          <div class="modal-body">
+            {% csrf_token %}
+            {{ website_form.non_field_errors }}
+            <div class="fieldWrapper mb-3">
+              {{ website_form.name.errors }}
+              <label for="{{ website_form.name.id_for_label }}" class="form-label">Website name *</label>
+              <input type="text" class="form-control" name="name" maxlength="30" required="" id="id_name">
+            </div>
+
+            <div class="fieldWrapper mb-3">
+              {{ website_form.rss.errors }}
+              <label for="{{ website_form.rss.id_for_label }}" class="form-label">Website RSS *</label>
+              <input type="text" class="form-control" name="rss" maxlength="255" required="" id="id_rss">
+            </div>
+            <div class="form-text">* Fields are required</div>
+            <input type="hidden" name="next" value="{{ request.path }}">
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Submits</button>
+          </div>
+        </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal add topic-->
+<div class="modal fade" id="addTopic" tabindex="-1" aria-labelledby="addTopicLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addTopicLabel">Add a topic</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form action="/feed/add/" method="POST" class="post-form">
+        <div class="modal-body">
+          {% csrf_token %}
+          {{ topic_form.non_field_errors }}
+
+        <div class="fieldWrapper mb-3">
+          {{ topic_form.name.errors }}
+          <label for="{{ topic_form.name.id_for_label }}" class="form-label">Topic name *</label>
+          <input type="text" class="form-control" name="name" maxlength="30" required="" id="id_name">
+        </div>
+        <div class="fieldWrapper mb-3">
+          {{ topic_form.key_words.errors }}
+          <label for="{{ topic_form.key_words.id_for_label }}" class="form-label">Topic key words *</label>
+          <textarea name="key_words" class="form-control" rows="5" required="" id="id_key_words" spellcheck="false"></textarea>
+          <div class="form-text">Write your key words separated with backspace.</div>
+        </div>
+        <div class="fieldWrapper mb-3">
+          {{ topic_form.ignor_words.errors }}
+          <label for="{{ topic_form.ignor_words.id_for_label }}" class="form-label">Words to ignore</label>
+          <textarea name="ignor_words" class="form-control" rows="5" id="id_ignor_words" spellcheck="false"></textarea>
+          <div class="form-text">News that contain these words will be ignored.</div>
+        </div>
+        <div class="form-text">* Fields are required</div>
+        <input type="hidden" name="next" value="{{ request.path }}">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal delete Topic -->
+{% for item in topics %}
+  <div class="modal fade" id="deleteTopic{{item.pk}}" tabindex="-1" aria-labelledby="deleteTopic{{item.pk}}Label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteTopic{{item.pk}}Label">Are  you sure you want to delete {{ item.name }} topic?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>All the filtered news will be deleted. New pieces of news won't be filtered on {{item.name}} topic.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, keep it</button>
+          <a href="{% url "topic_remove" pk=item.pk %}?next={{ request.path }}" class="btn btn-primary">Yes, delete it</a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+<!-- Modal delete Website -->
+  <div class="modal fade" id="deleteWebsite" tabindex="-1" aria-labelledby="deleteWebsiteLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content" id="deleteWebsiteContent">
+        
+      </div>
+    </div>
+  </div>
+
+<!-- Modal edit topic-->
+<div class="modal fade" id="editTopic" tabindex="-1" aria-labelledby="editTopicLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" id="editTopicContent">
+      
+    </div>
+  </div>
+</div>
+
+<!-- Modal edit website-->
+<div class="modal fade" id="editWebsite" tabindex="-1" aria-labelledby="editWebsiteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" id="editWebsiteContent">
+      
+    </div>
+  </div>
+</div>
+
+<!-- Modal edit NewsPiece topic-->
+<div class="modal fade" id="newspieceTopic" tabindex="-1" aria-labelledby="newspieceTopicLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" id="newspieceTopicContent">
+      
+    </div>
+  </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+<script src="{% static 'dashboard.js' %}" type="text/javascript"></script>
+<script>
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+</script>
+</body>
+</html>

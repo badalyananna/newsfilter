@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_content %}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ current_website.name }} news</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <span class="text-muted last-updated" style="margin-right: 0.8rem; margin-top: 7px;"> Last updated on {{last_upd}}</span>
+      <button class="btn btn-sm btn-outline-secondary update-btn" data-category="website" data-type="{{ current_website.pk }}">Update
+        <i class="bi-arrow-clockwise"></i>
+      </button>
+
+      <a class="btn btn-sm btn-outline-secondary markallread" data-category="website" data-type="{{ current_website.pk }}" style="margin-left: 0.8rem" href="#">Mark all as read 
+        
+      </a>
+    </div>
+    
+  </div>
+
+
+    
+<div class="news-container">
+  {% include "news_card.html" %}
+</div>  
+
+<button class="btn btn-outline-primary load-old-btn" data-category="website" data-type="{{current_website.pk}}" data-displayed="0" data-undisplayed="{{undisplayed_news}}">Load old news</button>
+
+{% endblock %}

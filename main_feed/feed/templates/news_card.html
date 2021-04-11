@@ -1,0 +1,42 @@
+{% if displayed_news == 0 %}
+<p class="no-news-message">No unread news to display</p>
+
+{% else %}
+{% for piece in object_list %}
+<div class="card mb-3" id="piece{{piece.id}}" style="max-width: 1040px;
+    {% if piece.important == True %} background-color: #eee; {% endif %}
+    {% if piece.unread == False %} color: #888; {% endif %}
+">
+    <div class="row g-0">
+        <div class="col-md-11">
+            <div class="card-body">
+              <h5 class="card-title">{% autoescape off %} {{piece.title|striptags}} {% endautoescape %}</h5>
+              <p class="card-text"><small class="text-muted">{{piece.website}} | Published on {{piece.published}} |
+                {% if piece.topics_assigned.all|length > 0 %} Topics:
+                  {% for topic in piece.topics_assigned.all %}
+                      {{topic.name}}
+                  {% endfor %}
+                <a href="#" class="link-secondary" data-pk="{{ piece.pk }}" data-bs-toggle="modal" data-bs-target="#newspieceTopic">Edit topics</a>
+                {% else %}
+                <a href="#" class="link-secondary" data-pk="{{ piece.pk }}" data-bs-toggle="modal" data-bs-target="#newspieceTopic">Add to topics</a>
+                {% endif %}
+                
+              </small></p>
+              <p class="card-text">{% autoescape off %} {{piece.description|striptags|slice:":400" }} {% endautoescape %}</p>
+              <a href="{{piece.link}}" class="link-dark" target="_blank">View full article</a>
+            </div>           
+          </div>
+          <div class="col-md-1">
+            <div class="card-body">
+            <a class="nav-link link-secondary readbutton" href="#" data-catid="{{ piece.id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark as read">
+              <i class="bi-archive"></i>
+            </a>
+            <a class="nav-link link-secondary importantbtn" href="#" data-catid="{{ piece.id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark as important">
+              <i class="bi-bookmark"></i>
+            </a>
+            </div>
+        </div> 
+    </div>
+</div>
+{% endfor %}
+{% endif %}

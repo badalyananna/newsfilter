@@ -1,0 +1,35 @@
+      <div class="modal-header">
+        <h5 class="modal-title" id="editTopicLabel">Edit {{topic_name}} topic</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="POST" data-pk={{topic.pk}} class="post-form" id="editTopicForm">
+        <div class="modal-body">
+          {% csrf_token %}
+          {{ topic_edit_form.non_field_errors }}
+
+        <div class="fieldWrapper mb-3">
+          {{ topic_edit_form.name.errors }}
+          <label for="{{ topic_form.name.id_for_label }}" class="form-label">Topic name *</label>
+          <input class="form-control" type="text" name="name" value="{{ topic.name }}" maxlength="30" required="" id="id_name">
+        </div>
+        <div class="fieldWrapper mb-3">
+          {{ topic_edit_form.key_words.errors }}
+          <label for="{{ topic_edit_form.key_words.id_for_label }}" class="form-label">Topic key words *</label>
+          <textarea class="form-control" name="key_words" rows="5" required="" id="id_key_words" spellcheck="true">{{ topic.key_words }}</textarea>
+          <div class="form-text">Write your key words separated with backspace.</div>
+        </div>
+        <div class="fieldWrapper mb-3">
+          {{ topic_edit_form.ignor_words.errors }}
+          <label for="{{ topic_edit_form.ignor_words.id_for_label }}" class="form-label">Words to ignore</label>
+          <textarea class="form-control" name="ignor_words" rows="5" id="id_ignor_words" spellcheck="false">{{ topic.ignor_words}}</textarea>
+          <div class="form-text">News that contain these words will be ignored.</div>
+        </div>
+        <div class="form-text">* Fields are required</div>
+        <input type="hidden" name="next" value="{{ next }}">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </div>
+      </form>

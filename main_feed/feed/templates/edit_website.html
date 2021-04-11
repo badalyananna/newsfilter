@@ -1,0 +1,28 @@
+<div class="modal-header">
+    <h5 class="modal-title" id="addWebsiteLabel">Edit a {{ website.name }} website</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div>
+    <form method="POST" data-pk="{{ website.pk }}" id="editWebsiteForm">
+      <div class="modal-body">
+        {% csrf_token %}
+        {{ website_edit_form.non_field_errors }}
+        <div class="fieldWrapper mb-3">
+          {{ website_edit_form.name.errors }}
+          <label for="{{ website_form.name.id_for_label }}" class="form-label">Website name *</label>
+          <input type="text" class="form-control" name="name" value="{{ website.name }}" maxlength="30" required="" id="id_name">
+        </div>
+
+        <div class="fieldWrapper mb-3">
+          {{ website_edit_form.rss.errors }}
+          <label for="{{ website_form.rss.id_for_label }}" class="form-label">Website RSS *</label>
+          <input type="text" class="form-control" name="rss" value="{{ website.rss }}" maxlength="255" required="" id="id_rss">
+        </div>
+        <div class="form-text">* Fields are required</div>
+        <input type="hidden" name="next" value="{{ next }}">
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Submits</button>
+      </div>
+    </form>

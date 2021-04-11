@@ -1,0 +1,11 @@
+<div class="modal-header">
+    <h5 class="modal-title" id="deleteWebsiteLabel">Are  you sure you want to delete {{ website.name }} website?</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div>
+  <div class="modal-body">
+    <p>All the news will be deleted. If you add the {{website.name}} website again they won't appear.</p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, keep it</button>
+    <a href="{% url "website_remove_confirm" pk=website.pk %}?next={{ next }}" class="btn btn-primary">Yes, delete it</a>
+  </div>

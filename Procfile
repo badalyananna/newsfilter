@@ -1,0 +1,1 @@
+web: gunicorn --pythonpath main_feed main_feed.wsgi --log-file -
