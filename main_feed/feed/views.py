@@ -139,8 +139,8 @@ def main_dashboard(request):
         'object_list': pieces_of_news,
         'displayed_news': len(pieces_of_news),
         'undisplayed_news': len(NewsPiece.objects.filter(user = user, chosen = True, unread = False)),
-        'topics': Topic.objects.filter(user = user),
-        'websites': Website.objects.filter(user = user),
+        'topics': Topic.objects.filter(user = user).order_by('pk'),
+        'websites': Website.objects.filter(user = user).order_by('pk'),
         'last_upd': request.user.last_upd,
         'website_form': WebsiteForm(),
         'topic_form': TopicForm(),
@@ -307,8 +307,8 @@ def news_important(request, topic_pk):
             'object_list': pieces_of_news,
             'displayed_news': len(pieces_of_news),
             'undisplayed_news': len(undisplayed_news),
-            'topics': Topic.objects.filter(user = user),
-            'websites': Website.objects.filter(user = user),
+            'topics': Topic.objects.filter(user = user).order_by('pk'),
+            'websites': Website.objects.filter(user = user).order_by('pk'),
             'current_topic': topic,
             'topic_pk': topic_pk,
             'last_upd': user.last_upd,
@@ -335,8 +335,8 @@ def news_website(request, website_pk):
             'object_list': pieces_of_news,
             'displayed_news': len(pieces_of_news),
             'undisplayed_news': len(NewsPiece.objects.filter(user = user, website = website_pk, unread = False)),
-            'topics': Topic.objects.filter(user = user),
-            'websites': Website.objects.filter(user = user),
+            'topics': Topic.objects.filter(user = user).order_by('pk'),
+            'websites': Website.objects.filter(user = user).order_by('pk'),
             'current_website': website,
             'last_upd': request.user.last_upd,
             'website_form': WebsiteForm(),
@@ -362,8 +362,8 @@ def news_topic(request, topic_pk):
             'object_list': pieces_of_news,
             'displayed_news': len(pieces_of_news),
             'undisplayed_news': len(NewsPiece.objects.filter(user = user, topics_assigned = topic_object, unread = False)),
-            'topics': Topic.objects.filter(user = user),
-            'websites': Website.objects.filter(user = user),
+            'topics': Topic.objects.filter(user = user).order_by('pk'),
+            'websites': Website.objects.filter(user = user).order_by('pk'),
             'current_topic': topic_object,
             'last_upd': request.user.last_upd,
             'website_form': WebsiteForm(),
@@ -405,23 +405,8 @@ def mark_read(request):
 def mark_all_read(request):
     if request.method == "GET":
         user = request.user
-        category = request.GET['category']
-        if category == "all":
-            NewsPiece.objects.filter(user = user, displayed=True, chosen = True, important = False, unread = True).update(unread = False)
-        elif category == "website":
-            website_pk = request.GET['pk']
-            NewsPiece.objects.filter(user = user, displayed=True, website = website_pk, important = False, unread = True).update(unread = False)
-        elif category == "topic":
-            topic_pk = request.GET['pk']
-            NewsPiece.objects.filter(user = user, displayed=True, topics_assigned = topic_pk, important = False, unread = True).update(unread = False)
-        elif category == "important":
-            topic_pk = request.GET['pk']
-            if topic_pk == "0":
-                NewsPiece.objects.filter(user = user, displayed=True, chosen = False, important = True, unread = True).update(unread = False)
-            else:
-                NewsPiece.objects.filter(user = user, displayed=True, topics_assigned = topic_pk, important = True, unread = True).update(unread = False)
-        else:
-            return HttpResponse("Fail, no such category")
+
+        NewsPiece.objects.filter(user = user, displayed=True, important = False, unread = True).update(unread = False)
 
         topic_unread_values, website_unread_values = get_unread_values(user)
         data = [{"topic_unread_values": topic_unread_values,

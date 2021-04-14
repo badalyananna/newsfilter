@@ -66,21 +66,15 @@ $(document).on('click', '.importantbtn', function() {
 });
 
 $('.markallread').click(function(){
-  var cat;
-  cat = $(this).attr("data-category");
-  var type;
-  type = $(this).attr("data-type");
   $.ajax(
   {
       type:"GET",
       url: "/feed/markallread",
       data:{
-               category: cat,
-               pk: type
+
       },
       success: function( data ) 
       { 
-        console.log("data science")
         $('.card').each(function() {
           if ($(this).css('background-color') == 'rgb(255, 255, 255)') {
             $(this).css('color', '#888')
