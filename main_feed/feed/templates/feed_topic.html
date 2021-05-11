@@ -6,11 +6,8 @@
     <h1 class="h2">{{ current_topic.name }} news</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <span class="text-muted last-updated" style="margin-right: 0.8rem; margin-top: 7px;"> Last updated on {{last_upd}}</span>
-        <a class="btn btn-sm btn-outline-secondary update-btn" data-category="topic" data-type="{{ current_topic.pk }}" href="#">Update
-          <i class="bi-arrow-clockwise"></i>
-        </a>
+        <i class="bi-arrow-clockwise update-btn" data-category="topic" data-type="{{ current_topic.pk }}"></i>
 
-        <a class="btn btn-sm btn-outline-secondary markallread" style="margin-left: 0.8rem" href="#">Mark all as read </a>
     </div>
     
   </div>
@@ -22,6 +19,6 @@
 
 
 <button class="btn btn-outline-primary load-old-btn" data-category="topic" data-type="{{ current_topic.pk }}" data-displayed="0" data-undisplayed="{{undisplayed_news}}">Load old news</button>
-
+<button class="btn btn-outline-secondary markallread"> Mark all as read </button>
 {% endblock %}
 

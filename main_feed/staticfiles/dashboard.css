@@ -7,9 +7,16 @@ i.bi-house-door {
 
 }
 
-i.bi-arrow-clockwise {
-  font-size: 1rem;
+.update-btn {
+  cursor: pointer;
+  color:#6c757d;
+  align-self: flex-end;
+  font-size: 1.1rem;
   margin-left: 0.1rem;
+}
+
+.update-btn:hover {
+  color: #4a4d50;
 }
 
 .hand-pointer {

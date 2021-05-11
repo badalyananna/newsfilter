@@ -20,6 +20,7 @@ class Command(BaseCommand):
                     filter_news(user)
                 
                 print(f'The database was updated at {datetime.now(pytz.timezone("Asia/Tashkent"))}')              
+                threading.Timer(3600, update).start()
             except URLError:
                 print(f'{datetime.now(pytz.timezone("Asia/Tashkent"))} URLError occured, restarting in 10 minutes.')
                 threading.Timer(600, update).start()

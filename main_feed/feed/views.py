@@ -26,7 +26,7 @@ def scrape(user):
             print(user, site.name)
 
             if site.pk in websites_set:
-                last_pub = NewsPiece.objects.filter(website = site).order_by('published')[::-1][0].published
+                last_pub = NewsPiece.objects.filter(website = site).order_by('published')[::-1][0]
 
                 for i in range(len(nf.entries)):
                     try:
@@ -43,17 +43,20 @@ def scrape(user):
                     except:
                         piece_pub = parse(nf.entries[i].published)
                     #print(piece_pub, last_pub)
-                    if piece_pub > last_pub:
-                        piece_of_news = NewsPiece()
-                        piece_of_news.website = site
-                        piece_of_news.title = nf.entries[i].title
-                        piece_of_news.published = piece_pub
-                        piece_of_news.description = nf.entries[i].description
-                        piece_of_news.link = nf.entries[i].link
-                        piece_of_news.user = user
-                        piece_of_news.save()
+                    if piece_pub > last_pub.published:
+                        if nf.entries[i].title != last_pub.title:
+                            piece_of_news = NewsPiece()
+                            piece_of_news.website = site
+                            piece_of_news.title = nf.entries[i].title
+                            piece_of_news.published = piece_pub
+                            piece_of_news.description = nf.entries[i].description
+                            piece_of_news.link = nf.entries[i].link
+                            piece_of_news.user = user
+                            piece_of_news.save()
+                        else:
+                            pass
                     else:
-                        break
+                        pass
     
             else:
                 for i in range(len(nf.entries)):
@@ -131,14 +134,19 @@ def main_dashboard(request):
     #set all displayed to false
     NewsPiece.objects.filter(user = user).update(displayed = False)
     #then set the news that will be displayed to True
-    NewsPiece.objects.filter(user = user, chosen = True, unread = True).update(displayed = True)
-
-    pieces_of_news = NewsPiece.objects.filter(user = user, chosen = True, unread = True).order_by('published')[::-1]
-
+    unread_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, unread = True)
+    if len(unread_news) > 20:
+        pieces_of_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = False).order_by('-unread', '-published')[:20]
+        ids = NewsPiece.objects.filter(user = user, topics_assigned__isnull = False).order_by('-unread', '-published').values_list('id', flat = True)[:20]
+        NewsPiece.objects.filter(id__in = ids).update(displayed = True)
+    else:
+        pieces_of_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, unread = True).order_by('-published')
+        NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, unread = True).update(displayed = True)
+    
     context = {
         'object_list': pieces_of_news,
         'displayed_news': len(pieces_of_news),
-        'undisplayed_news': len(NewsPiece.objects.filter(user = user, chosen = True, unread = False)),
+        'undisplayed_news': len(NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, unread = False)),
         'topics': Topic.objects.filter(user = user).order_by('pk'),
         'websites': Website.objects.filter(user = user).order_by('pk'),
         'last_upd': request.user.last_upd,
@@ -191,9 +199,9 @@ def update(request):
         user.save()
         category = request.GET['category']
         if category == "all":
-            updated_news = NewsPiece.objects.filter(user = user, chosen = True, unread = True, displayed = False).order_by('published')[::-1]
+            updated_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, unread = True, displayed = False).order_by('published')[::-1]
             #update the displayed status so that when we load old news, they won't be displayed
-            NewsPiece.objects.filter(user = user, chosen = True, unread = True, displayed = False).update(displayed = True)
+            NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, unread = True, displayed = False).update(displayed = True)
         elif category == "website":
             website_pk = request.GET['pk']
             updated_news =  NewsPiece.objects.filter(user = user, website = website_pk, unread = True, displayed = False).order_by('published')[::-1]
@@ -227,12 +235,12 @@ def load_old(request):
     if request.method == "GET" and request.is_ajax:
         category = request.GET['category']
         if category == "all":
-            old_pieces = NewsPiece.objects.filter(user = user, chosen = True, displayed = False).order_by('published')[::-1][:20] 
-            ids = NewsPiece.objects.filter(user = user, chosen = True, displayed = False).order_by('published').reverse().values_list('id', flat = True)[:20]
+            old_pieces = NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, displayed = False).order_by('-unread', '-published')[:20]
+            ids = NewsPiece.objects.filter(user = user, topics_assigned__isnull = False, displayed = False).order_by('-unread', '-published').reverse().values_list('id', flat = True)[:20]
         elif category == "website":
             website_pk = request.GET['pk']
-            old_pieces = NewsPiece.objects.filter(user = user, website = website_pk, displayed = False).order_by('published')[::-1][:20]
-            ids = NewsPiece.objects.filter(user = user, website = website_pk, displayed = False).order_by('published').reverse().values_list('id', flat = True)[:20]
+            old_pieces = NewsPiece.objects.filter(user = user, website = website_pk, displayed = False).order_by('-unread', '-published')[:20]
+            ids = NewsPiece.objects.filter(user = user, website = website_pk, displayed = False).order_by('-unread', '-published').values_list('id', flat = True)[:20]
         elif category == "topic":
             topic_pk = request.GET['pk']
             old_pieces = NewsPiece.objects.filter(user = user, topics_assigned = topic_pk, displayed = False).order_by('published')[::-1][:20]
@@ -240,8 +248,8 @@ def load_old(request):
         elif category == "important":
             topic_pk = request.GET['pk']
             if topic_pk == '0':
-                old_pieces = NewsPiece.objects.filter(user = user, chosen = False, important = True, displayed = False).order_by('published')[::-1][:20]
-                ids = NewsPiece.objects.filter(user = user, chosen = False, important = True, displayed = False).order_by('published').reverse().values_list('id', flat = True)[:20]
+                old_pieces = NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True, displayed = False).order_by('published')[::-1][:20]
+                ids = NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True, displayed = False).order_by('published').reverse().values_list('id', flat = True)[:20]
             else:
                 old_pieces = NewsPiece.objects.filter(user = user, topics_assigned = topic_pk, important = True, displayed = False).order_by('published')[::-1][:20]
                 ids = NewsPiece.objects.filter(user = user, topics_assigned = topic_pk, important = True, displayed = False).order_by('published').reverse().values_list('id', flat = True)[:20]
@@ -271,18 +279,17 @@ def news_important(request, topic_pk):
             #set all displayed to false
             NewsPiece.objects.filter(user = user).update(displayed = False)
             #then set the news that will be displayed to True
-            NewsPiece.objects.filter(user = user, chosen = False, important = True, unread = True).update(displayed = True)
-
-            pieces_of_news = NewsPiece.objects.filter(user = user, chosen = False, important = True, unread = True).order_by('published')[::-1]
+            NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True, unread = True).update(displayed = True)
+            pieces_of_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True, unread = True).order_by('published')[::-1]
             if len(pieces_of_news) < 20:
-                pieces_of_news = NewsPiece.objects.filter(user = user, chosen = False, important = True).order_by('unread', 'published')[::-1][:20]
+                pieces_of_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True).order_by('unread', 'published')[::-1][:20]
 
-                ids = NewsPiece.objects.filter(user = user, chosen = False, important = True).order_by('unread', 'published').reverse().values_list('id', flat = True)[:20]
+                ids = NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True).order_by('unread', 'published').reverse().values_list('id', flat = True)[:20]
                 NewsPiece.objects.filter(id__in = ids).update(displayed = True)
 
-                undisplayed_news = NewsPiece.objects.filter(user = user, chosen = False, important = True).order_by('unread', 'published')[::-1][20:]
+                undisplayed_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True).order_by('unread', 'published')[::-1][20:]
             else:
-                undisplayed_news = NewsPiece.objects.filter(user = user, chosen = False, important = True, unread = False)
+                undisplayed_news = NewsPiece.objects.filter(user = user, topics_assigned__isnull = True, important = True, unread = False)
         else:
             topic_object = Topic.objects.get(pk = topic_pk)
             #set all displayed to false
@@ -326,15 +333,20 @@ def news_website(request, website_pk):
     if website.user == user:
         #set all displayed to false
         NewsPiece.objects.filter(user = user).update(displayed = False)
-        #then set the news that will be displayed to True
-        NewsPiece.objects.filter(user = user, website = website, unread = True).update(displayed = True)
-        
-        pieces_of_news = NewsPiece.objects.filter(user = user, website = website_pk, unread = True).order_by('published')[::-1]
+
+        unread_news = NewsPiece.objects.filter(user = user, website = website_pk, unread = True)
+
+        if len(unread_news) > 20:
+            pieces_of_news = NewsPiece.objects.filter(user = user, website = website_pk).order_by('-unread', '-published')[:20]
+            ids = NewsPiece.objects.filter(user = user, website = website_pk).order_by('-unread', '-published').values_list('id', flat = True)[:20]
+            NewsPiece.objects.filter(id__in = ids).update(displayed = True)
+        else:
+            pieces_of_news = unread_news.order_by('-published')
+            NewsPiece.objects.filter(user = user, website = website_pk, unread = True).update(displayed = True)
 
         context = {
             'object_list': pieces_of_news,
             'displayed_news': len(pieces_of_news),
-            'undisplayed_news': len(NewsPiece.objects.filter(user = user, website = website_pk, unread = False)),
             'topics': Topic.objects.filter(user = user).order_by('pk'),
             'websites': Website.objects.filter(user = user).order_by('pk'),
             'current_website': website,
